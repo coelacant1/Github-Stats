@@ -176,10 +176,14 @@ Commit the change - this triggers a build and deploys automatically.
 
 ### Step 5 - Add your GitHub PAT(s) as runtime secrets
 
+Secrets live in **Cloudflare**, not GitHub.
+
 1. Go to your Worker -> **Settings** -> **Variables & Secrets**
-2. Under **Secrets**, click **Add** for each token:
-   - `PAT_1` -> a GitHub Personal Access Token with **no scopes selected** (public data only - the token is needed to access the GraphQL API and for the 5,000 req/hr rate limit vs 60/hr unauthenticated)
+2. Scroll to the **Secrets** section -> click **Add**
+3. Add each token (Name / Value):
+   - `PAT_1` -> a GitHub Personal Access Token with **no scopes selected** (the token is needed to access the GraphQL API and for the 5,000 req/hr rate limit vs 60/hr unauthenticated)
    - `PAT_2`, `PAT_3`, ... *(optional - more tokens = higher rate limit quota)*
+4. Click **Deploy** after saving - this re-deploys the Worker with the secrets applied
 
 Your Worker URL will be:
 ```

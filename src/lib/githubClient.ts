@@ -28,9 +28,13 @@ async function graphql<T>(
   query: string,
   variables: Record<string, unknown>,
   attempt = 0,
+  lastStatus = 0,
+  lastBody = "",
 ): Promise<GraphQLResponse<T>> {
   if (attempt >= MAX_RETRIES) {
-    throw new Error("Max retries reached for GitHub GraphQL request.");
+    throw new Error(
+      `Max retries reached for GitHub GraphQL request (last status ${lastStatus}: ${lastBody.slice(0, 160)}).`,
+    );
   }
 
   const tokenHealth = pickToken(env);
@@ -40,27 +44,32 @@ async function graphql<T>(
     headers: {
       Authorization: `bearer ${tokenHealth.token}`,
       "Content-Type": "application/json",
+      "User-Agent": "github-stats-worker",
     },
     body: JSON.stringify({ query, variables }),
     signal: AbortSignal.timeout(15_000),
   });
 
   if (res.status === 401) {
-    const body = await res.json() as { message?: string };
-    const msg = body.message ?? "";
+    const body = await res.text();
+    let msg = "";
+    try { msg = (JSON.parse(body) as { message?: string }).message ?? ""; } catch { msg = body; }
     if (msg === "Bad credentials" || msg.startsWith("Sorry. Your account was suspended")) {
       markBad(tokenHealth.token);
-      return graphql<T>(env, query, variables, attempt + 1);
+      return graphql<T>(env, query, variables, attempt + 1, 401, msg);
     }
+    return graphql<T>(env, query, variables, attempt + 1, 401, msg);
   }
 
   if (res.status === 403 || res.status === 429) {
+    const body = await res.text();
     recordResponse(tokenHealth.token, res.headers);
-    return graphql<T>(env, query, variables, attempt + 1);
+    return graphql<T>(env, query, variables, attempt + 1, res.status, body);
   }
 
   if (!res.ok) {
-    throw new Error(`GitHub GraphQL HTTP error: ${res.status} ${res.statusText}`);
+    const body = await res.text();
+    throw new Error(`GitHub GraphQL HTTP error: ${res.status} ${res.statusText} - ${body.slice(0, 160)}`);
   }
 
   recordResponse(tokenHealth.token, res.headers);
@@ -71,7 +80,7 @@ async function graphql<T>(
   );
   if (isRateLimited) {
     recordResponse(tokenHealth.token, new Headers({ "x-ratelimit-remaining": "0" }));
-    return graphql<T>(env, query, variables, attempt + 1);
+    return graphql<T>(env, query, variables, attempt + 1, 200, "RATE_LIMITED");
   }
 
   return body;

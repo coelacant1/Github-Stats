@@ -99,6 +99,19 @@ export default {
       const p = url.pathname.replace(/\/$/, "");
       if (p === "/api") return await handleStats(env, q);
       if (p === "/api/top-langs") return await handleTopLangs(env, q);
+      if (p === "/debug") {
+        const debugSecret = (env as Record<string, unknown>)["DEBUG_TOKEN"];
+        if (typeof debugSecret !== "string" || !debugSecret || q["token"] !== debugSecret) {
+          return new Response("Not found", { status: 404 });
+        }
+        const keys = Object.keys(env as Record<string, unknown>).map((k) => {
+          const v = (env as Record<string, unknown>)[k];
+          return `${k}: ${typeof v}${typeof v === "string" ? ` (len=${v.length})` : ""}`;
+        });
+        return new Response(JSON.stringify(keys, null, 2), {
+          headers: { "Content-Type": "application/json", ...CORS },
+        });
+      }
       return new Response("Not found", { status: 404 });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
