@@ -145,17 +145,13 @@ export async function fetchStats(
 
   let totalCommits = user.commits.totalCommitContributions;
   if (includeAllCommits) {
-    try {
-      const result = await restGet<SearchCommitsResult>(
-        env,
-        `/search/commits?q=author:${encodeURIComponent(username)}`,
-      );
-      if (result.total_count > 0) {
-        totalCommits = result.total_count;
-      }
-    } catch {
-      // fall back to contributions count
-    }
+    // Match upstream: when include_all_commits=true, the REST search count is authoritative.
+    // Don't silently fall back - a wrong count significantly degrades the rank.
+    const result = await restGet<SearchCommitsResult>(
+      env,
+      `/search/commits?q=author:${encodeURIComponent(username)}`,
+    );
+    totalCommits = result.total_count;
   }
 
   const excludeEnv = typeof env.EXCLUDE_REPO === "string"

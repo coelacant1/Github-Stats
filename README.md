@@ -4,6 +4,8 @@ A self-hosted GitHub profile stats service deployed on **Cloudflare Workers** wi
 
 Built in TypeScript with no dependencies at runtime - uses native Workers `fetch` + KV APIs.
 
+> **Note:** This is a modernized, Cloudflare Workers–native version of [anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats). Rank calculation and card output stay close to the original, while the runtime, caching, and token-rotation strategy are rebuilt from scratch to avoid the rate-limiting issues with the upstream public instance.
+
 ---
 
 ## Example Gallery

@@ -8,10 +8,6 @@ function toPercent(langs: LangData[]): (LangData & { pct: number })[] {
   return langs.map((l) => ({ ...l, pct: total ? (l.size / total) * 100 : 0 }));
 }
 
-// ------------------------------------------------------------------
-// Pie / Donut helpers
-// ------------------------------------------------------------------
-
 function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   const rad = ((deg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -30,7 +26,6 @@ function arcPath(cx: number, cy: number, r: number, start: number, end: number, 
       "Z",
     ].join(" ");
   }
-
   const si = polarToCartesian(cx, cy, innerR, end);
   const ei = polarToCartesian(cx, cy, innerR, start);
   return [
@@ -42,133 +37,178 @@ function arcPath(cx: number, cy: number, r: number, start: number, end: number, 
   ].join(" ");
 }
 
-// ------------------------------------------------------------------
-// Layout renderers
-// ------------------------------------------------------------------
-
-function renderPie(langs: (LangData & { pct: number })[], theme: CardTheme, title: string, compact = false): string {
-  const CX = compact ? 100 : 130;
-  const CY = compact ? 100 : 130;
-  const R = compact ? 80 : 110;
-  const INNER_R = compact ? 0 : 0; // full pie for "pie" layout
-  const W = compact ? 350 : 430;
-  const LEG_X = compact ? 195 : 255;
-  const LEG_Y = 25;
-  const LEG_SPACING = compact ? 20 : 22;
-  const H = Math.max(
-    50 + CY + R + 15,
-    50 + LEG_Y + langs.length * LEG_SPACING + 20,
-  );
-
-  let slices = "";
-  let angle = 0;
-  for (const lang of langs) {
-    const sweep = (lang.pct / 100) * 360;
-    if (sweep < 0.5) continue;
-    const endAngle = angle + sweep;
-    slices += `<path d="${arcPath(CX, CY, R, angle, endAngle, INNER_R)}" fill="${escXml(lang.color)}" aria-label="${escXml(lang.name)} ${lang.pct.toFixed(1)}%"/>`;
-    angle = endAngle;
-  }
-
-  const legend = langs
-    .map((l, i) => {
-      const y = LEG_Y + i * LEG_SPACING;
-      return `<rect x="${LEG_X}" y="${y}" width="12" height="12" rx="2" fill="${escXml(l.color)}"/>
-<text x="${LEG_X + 16}" y="${y + 10}" font-size="11" fill="${escXml(theme.textColor)}" font-family="'Segoe UI',sans-serif">${escXml(l.name)} <tspan font-weight="bold">${l.pct.toFixed(1)}%</tspan></text>`;
-    })
-    .join("\n");
-
-  const border = theme.hideBorder
-    ? ""
-    : `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="${theme.borderRadius}" stroke="${escXml(theme.borderColor)}" fill="none" stroke-width="1"/>`;
-
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escXml(title)}">
-  <title>${escXml(title)}</title>
-  <rect width="${W}" height="${H}" rx="${theme.borderRadius}" fill="${escXml(theme.bgColor)}"/>
-  ${border}
-  <text x="20" y="35" font-size="16" font-weight="bold" fill="${escXml(theme.titleColor)}" font-family="'Segoe UI',sans-serif">${escXml(title)}</text>
-  <g transform="translate(0, 50)">${slices}</g>
-  <g transform="translate(0, 50)">${legend}</g>
-</svg>`;
+interface RenderArgs {
+  langs: (LangData & { pct: number })[];
+  theme: CardTheme;
+  title: string;
 }
 
-function renderDonut(langs: (LangData & { pct: number })[], theme: CardTheme, title: string, vertical = false): string {
-  const CX = 120, CY = 120, R = 90, INNER_R = 55;
-  const W = vertical ? 280 : 460;
-  const legendX = vertical ? 20 : 255;
-  const legendStartY = vertical ? 260 : 60;
-  const spacing = 22;
-  const legendH = legendStartY + langs.length * spacing + 20;
-  const circleH = 50 + CY + R + 15;
-  const H = vertical ? Math.max(legendH, circleH) : Math.max(280, legendH);
-
-  let slices = "";
-  let angle = 0;
-  for (const lang of langs) {
-    const sweep = (lang.pct / 100) * 360;
-    if (sweep < 0.5) continue;
-    const endAngle = angle + sweep;
-    slices += `<path d="${arcPath(CX, CY + 50, R, angle, endAngle, INNER_R)}" fill="${escXml(lang.color)}" aria-label="${escXml(lang.name)} ${lang.pct.toFixed(1)}%"/>`;
-    angle = endAngle;
-  }
-
-  const legend = langs
-    .map((l, i) => {
-      const lx = legendX;
-      const ly = legendStartY + i * spacing;
-      return `<rect x="${lx}" y="${ly}" width="12" height="12" rx="2" fill="${escXml(l.color)}"/>
-<text x="${lx + 16}" y="${ly + 10}" font-size="11" fill="${escXml(theme.textColor)}" font-family="'Segoe UI',sans-serif">${escXml(l.name)} <tspan font-weight="bold">${l.pct.toFixed(1)}%</tspan></text>`;
-    })
-    .join("\n");
-
-  const border = theme.hideBorder
-    ? ""
-    : `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="${theme.borderRadius}" stroke="${escXml(theme.borderColor)}" fill="none" stroke-width="1"/>`;
-
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escXml(title)}">
-  <title>${escXml(title)}</title>
-  <rect width="${W}" height="${H}" rx="${theme.borderRadius}" fill="${escXml(theme.bgColor)}"/>
-  ${border}
-  <text x="20" y="30" font-size="16" font-weight="bold" fill="${escXml(theme.titleColor)}" font-family="'Segoe UI',sans-serif">${escXml(title)}</text>
-  ${slices}
-  ${legend}
-</svg>`;
+function commonStyle(theme: CardTheme): string {
+  return `
+.header {
+  font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif;
+  fill: ${theme.titleColor};
+  animation: fadeInAnimation 0.8s ease-in-out forwards;
+}
+@supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
+.lang-name {
+  font: 400 11px "Segoe UI", Ubuntu, Sans-Serif;
+  fill: ${theme.textColor};
+}
+.bold { font-weight: 700; fill: ${theme.textColor}; }
+.stagger {
+  opacity: 0;
+  animation: fadeInAnimation 0.3s ease-in-out forwards;
+}
+.lang-progress {
+  animation: growWidthAnimation 0.6s ease-in-out forwards;
+}
+@keyframes slideInAnimation {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes growWidthAnimation {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes fadeInAnimation {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+`.trim();
 }
 
-function renderBars(langs: (LangData & { pct: number })[], theme: CardTheme, title: string, compact = false): string {
+function legendItem(lang: LangData & { pct: number }, x: number, y: number, delayMs: number, theme: CardTheme): string {
+  return `<g transform="translate(${x}, ${y})" class="stagger" style="animation-delay: ${delayMs}ms">
+  <circle cx="5" cy="6" r="5" fill="${escXml(lang.color)}"/>
+  <text data-testid="lang-name" x="15" y="10" class="lang-name" fill="${escXml(theme.textColor)}">${escXml(lang.name)} ${lang.pct.toFixed(2)}%</text>
+</g>`;
+}
+
+// ---------- Pie ----------
+function renderPie({ langs, theme, title }: RenderArgs): string {
   const W = 300;
-  const ROW_H = compact ? 34 : 40;
-  const H = 50 + langs.length * ROW_H;
-  const BAR_W = W - 40;
-  const PADDING = 20;
+  const CX = 150, CY = 100, R = 90;
+  const cols = Math.ceil(langs.length / 5);
+  const legendCols: string[] = [];
+  for (let c = 0; c < cols; c++) {
+    const items = langs.slice(c * 5, c * 5 + 5);
+    legendCols.push(items.map((l, i) => legendItem(l, c * 150, i * 25, 450 + i * 150, theme)).join(""));
+  }
+  const legendH = 220 + Math.min(langs.length, 5) * 25 + 30;
+  const H = Math.max(220 + 30, legendH);
 
-  const rows = langs
-    .map((l, i) => {
-      const y = 50 + i * ROW_H;
-      const barWidth = Math.max(1, (l.pct / 100) * BAR_W);
-      return `<text x="${PADDING}" y="${y + 12}" font-size="11" fill="${escXml(theme.textColor)}" font-family="'Segoe UI',sans-serif">${escXml(l.name)}</text>
-<text x="${W - PADDING}" y="${y + 12}" text-anchor="end" font-size="11" fill="${escXml(theme.textColor)}" font-family="'Segoe UI',sans-serif">${l.pct.toFixed(1)}%</text>
-<rect x="${PADDING}" y="${y + 16}" width="${BAR_W}" height="8" rx="4" fill="${escXml(theme.textColor)}" opacity="0.1"/>
-<rect x="${PADDING}" y="${y + 16}" width="${barWidth}" height="8" rx="4" fill="${escXml(l.color)}"/>`;
-    })
-    .join("\n");
+  let slices = "";
+  let angle = 0;
+  langs.forEach((lang, i) => {
+    const sweep = (lang.pct / 100) * 360;
+    if (sweep < 0.5) { angle += sweep; return; }
+    const endAngle = angle + sweep;
+    const delay = 100 + i * 100;
+    slices += `<g class="stagger" style="animation-delay: ${delay}ms">
+  <path data-testid="lang-pie" d="${arcPath(CX, CY, R, angle, endAngle, 0)}" fill="${escXml(lang.color)}" aria-label="${escXml(lang.name)} ${lang.pct.toFixed(2)}%"/>
+</g>`;
+    angle = endAngle;
+  });
 
+  return wrapCard(W, H, theme, title, `
+  <g data-testid="main-card-body" transform="translate(0, 55)">
+    <svg data-testid="lang-items">
+      <g transform="translate(0, 0)">
+        <svg data-testid="pie">${slices}</svg>
+      </g>
+      <g transform="translate(0, 220)">
+        <svg data-testid="lang-names" x="25">
+          ${legendCols.map((c, i) => `<g transform="translate(${i * 150}, 0)">${c}</g>`).join("")}
+        </svg>
+      </g>
+    </svg>
+  </g>`);
+}
+
+// ---------- Donut ----------
+function renderDonut({ langs, theme, title }: RenderArgs, vertical = false): string {
+  const CX = 150, CY = 100, R = 90, INNER_R = 55;
+  const W = vertical ? 280 : 460;
+  let slices = "";
+  let angle = 0;
+  langs.forEach((lang, i) => {
+    const sweep = (lang.pct / 100) * 360;
+    if (sweep < 0.5) { angle += sweep; return; }
+    const endAngle = angle + sweep;
+    const delay = 100 + i * 100;
+    slices += `<g class="stagger" style="animation-delay: ${delay}ms">
+  <path d="${arcPath(CX, CY, R, angle, endAngle, INNER_R)}" fill="${escXml(lang.color)}" aria-label="${escXml(lang.name)} ${lang.pct.toFixed(2)}%"/>
+</g>`;
+    angle = endAngle;
+  });
+
+  let body: string;
+  let H: number;
+  if (vertical) {
+    const legend = langs.map((l, i) => legendItem(l, 0, i * 25, 450 + i * 150, theme)).join("");
+    H = 230 + langs.length * 25 + 25;
+    body = `
+    <g transform="translate(0, 0)"><svg>${slices}</svg></g>
+    <g transform="translate(25, 230)"><svg>${legend}</svg></g>`;
+  } else {
+    const legend = langs.map((l, i) => legendItem(l, 0, i * 25, 450 + i * 150, theme)).join("");
+    H = Math.max(220, 30 + langs.length * 25 + 30);
+    body = `
+    <g transform="translate(0, 0)"><svg>${slices}</svg></g>
+    <g transform="translate(280, 30)"><svg>${legend}</svg></g>`;
+  }
+
+  return wrapCard(W, H, theme, title, `
+  <g data-testid="main-card-body" transform="translate(0, 55)">
+    <svg data-testid="lang-items">${body}</svg>
+  </g>`);
+}
+
+// ---------- Bars (default + compact) ----------
+function renderBars({ langs, theme, title }: RenderArgs, compact: boolean): string {
+  const W = 300;
+  const PADDING = 25;
+  const BAR_W = W - PADDING * 2;
+  const ROW_H = compact ? 30 : 38;
+  const headerH = 30;
+  const H = 55 + langs.length * ROW_H + 25;
+
+  const rows = langs.map((l, i) => {
+    const y = headerH + i * ROW_H;
+    const barWidth = Math.max(1, (l.pct / 100) * BAR_W);
+    const delay = 450 + i * 150;
+    return `<g class="stagger" style="animation-delay: ${delay}ms" transform="translate(0, ${y})">
+  <text x="${PADDING}" y="12" class="lang-name">${escXml(l.name)}</text>
+  <text x="${W - PADDING}" y="12" text-anchor="end" class="lang-name bold">${l.pct.toFixed(2)}%</text>
+  <svg width="${BAR_W}" x="${PADDING}" y="16">
+    <rect width="100%" height="8" rx="4" fill="${escXml(theme.textColor)}" opacity="0.1"/>
+    <rect class="lang-progress" width="${barWidth}" height="8" rx="4" fill="${escXml(l.color)}"/>
+  </svg>
+</g>`;
+  }).join("");
+
+  return wrapCard(W, H, theme, title, `
+  <g data-testid="main-card-body" transform="translate(0, 55)">
+    ${rows}
+  </g>`);
+}
+
+function wrapCard(W: number, H: number, theme: CardTheme, title: string, body: string): string {
   const border = theme.hideBorder
     ? ""
     : `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="${theme.borderRadius}" stroke="${escXml(theme.borderColor)}" fill="none" stroke-width="1"/>`;
-
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escXml(title)}">
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escXml(title)}">
   <title>${escXml(title)}</title>
-  <rect width="${W}" height="${H}" rx="${theme.borderRadius}" fill="${escXml(theme.bgColor)}"/>
+  <style>${commonStyle(theme)}</style>
+  <rect data-testid="card-bg" x="0.5" y="0.5" rx="${theme.borderRadius}" height="99%" width="${W - 1}" fill="${escXml(theme.bgColor)}" stroke-opacity="0"/>
   ${border}
-  <text x="${PADDING}" y="30" font-size="16" font-weight="bold" fill="${escXml(theme.titleColor)}" font-family="'Segoe UI',sans-serif">${escXml(title)}</text>
-  ${rows}
+  <g data-testid="card-title" transform="translate(25, 35)">
+    <text x="0" y="0" class="header" data-testid="header">${escXml(title)}</text>
+  </g>
+  ${body}
 </svg>`;
 }
-
-// ------------------------------------------------------------------
-// Public entry point
-// ------------------------------------------------------------------
 
 export function renderTopLangsCard(
   langMap: Record<string, LangData>,
@@ -194,18 +234,17 @@ export function renderTopLangsCard(
 
   let svg: string;
   if (layout === "pie") {
-    svg = renderPie(langs, theme, title);
+    svg = renderPie({ langs, theme, title });
   } else if (layout === "donut") {
-    svg = renderDonut(langs, theme, title);
+    svg = renderDonut({ langs, theme, title }, false);
   } else if (layout === "donut-vertical") {
-    svg = renderDonut(langs, theme, title, true);
+    svg = renderDonut({ langs, theme, title }, true);
   } else if (layout === "compact") {
-    svg = renderBars(langs, theme, title, true);
+    svg = renderBars({ langs, theme, title }, true);
   } else {
-    svg = renderBars(langs, theme, title, false);
+    svg = renderBars({ langs, theme, title }, false);
   }
 
-  // Inject stale note into the SVG before closing tag
   if (isStale) {
     svg = svg.replace(
       "</svg>",

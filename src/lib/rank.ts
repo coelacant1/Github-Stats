@@ -23,6 +23,7 @@ function expCdf(x: number): number {
 }
 
 function logNormCdf(x: number): number {
+  // approximation - matches upstream calculateRank.js
   return x / (1 + x);
 }
 
