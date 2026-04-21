@@ -1,0 +1,12 @@
+# Copy this to .dev.vars for local development with `wrangler dev`.
+# These are injected as env vars in the Worker runtime.
+# Never commit .dev.vars - it is gitignored.
+
+# Add one or more GitHub Personal Access Tokens (classic, read:user + read:org scopes).
+# The worker will rotate across all configured tokens automatically.
+PAT_1=ghp_your_first_token_here
+# PAT_2=ghp_your_second_token_here
+# PAT_3=ghp_your_third_token_here
+
+# Optional: comma-separated repository names to exclude from stats
+# EXCLUDE_REPO=my-private-repo,another-repo

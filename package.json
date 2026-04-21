@@ -1,0 +1,20 @@
+{
+  "name": "github-stats",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted GitHub stats cards on Cloudflare Workers with KV caching and token rotation",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4",
+    "typescript": "^5.4.3",
+    "wrangler": "^3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

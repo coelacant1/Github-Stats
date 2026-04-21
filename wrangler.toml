@@ -1,0 +1,17 @@
+name = "github-stats"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for shared stale cache (cross-instance, globally distributed).
+# Create in the Cloudflare dashboard: Workers & Pages -> KV -> Create namespace.
+# Paste the Namespace ID into both fields below.
+# (preview_id is only used by wrangler dev locally — same ID is fine.)
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "c507820f77834940af7d4f3bdadc894f"
+preview_id = "c507820f77834940af7d4f3bdadc894f"
+
+# Optional: global variables (non-secret)
+# [vars]
+# EXCLUDE_REPO = "my-private-repo,another-repo"
