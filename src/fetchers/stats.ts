@@ -145,13 +145,35 @@ export async function fetchStats(
 
   let totalCommits = user.commits.totalCommitContributions;
   if (includeAllCommits) {
-    // Match upstream: when include_all_commits=true, the REST search count is authoritative.
-    // Don't silently fall back - a wrong count significantly degrades the rank.
-    const result = await restGet<SearchCommitsResult>(
-      env,
-      `/search/commits?q=author:${encodeURIComponent(username)}`,
-    );
-    totalCommits = result.total_count;
+    // The REST search/commits count is authoritative when include_all_commits=true,
+    // but search has a strict 30/min rate limit. Cache the result independently
+    // (it changes slowly) and fall back to the cached value on rate-limit failure.
+    const restCacheKey = `commits:rest:${username}`;
+    let restCount: number | null = null;
+    try {
+      const result = await restGet<SearchCommitsResult>(
+        env,
+        `/search/commits?q=author:${encodeURIComponent(username)}`,
+      );
+      restCount = result.total_count;
+      // Cache for 7 days; commit history changes slowly enough.
+      try {
+        await env.CACHE_KV.put(restCacheKey, String(restCount), {
+          expirationTtl: 7 * 24 * 3600,
+        });
+      } catch {
+        // KV write failure is non-fatal.
+      }
+    } catch {
+      const cached = await env.CACHE_KV.get(restCacheKey);
+      if (cached !== null) {
+        restCount = parseInt(cached, 10);
+      }
+    }
+    if (restCount !== null && Number.isFinite(restCount) && restCount > 0) {
+      totalCommits = restCount;
+    }
+    // Otherwise: silently keep the GraphQL last-year count rather than 500-ing.
   }
 
   const excludeEnv = typeof env.EXCLUDE_REPO === "string"

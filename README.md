@@ -6,8 +6,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
 
 > **Note:** This is a modernized, Cloudflare Workers–native version of [anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats). Rank calculation and card output stay close to the original, while the runtime, caching, and token-rotation strategy are rebuilt from scratch to avoid the rate-limiting issues with the upstream public instance.
 
----
-
 ## Example Gallery
 
 ### Stats card
@@ -20,8 +18,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
 /api?username=coelacant1&show_icons=true
 ```
 
----
-
 #### With extra fields + dark theme
 
 <img src="https://github-stats.coela.workers.dev/api?username=coelacant1&show_icons=true&include_all_commits=true&title_color=e59bba&icon_color=e59bba&text_color=ffffff&bg_color=161b22&hide_border=true&show=reviews,prs_merged,prs_merged_percentage&number_format=long" alt="Stats card dark" width="495"/>
@@ -31,8 +27,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
   &title_color=e59bba&icon_color=e59bba&text_color=ffffff&bg_color=161b22
   &hide_border=true&show=reviews,prs_merged,prs_merged_percentage&number_format=long
 ```
-
----
 
 ### Top languages - all layouts
 
@@ -44,8 +38,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
 /api/top-langs/?username=coelacant1&layout=default&langs_count=6
 ```
 
----
-
 #### `layout=compact`
 
 <img src="https://github-stats.coela.workers.dev/api/top-langs/?username=coelacant1&layout=compact&langs_count=8&title_color=e59bba&icon_color=e59bba&text_color=ffffff&bg_color=161b22&hide_border=true" alt="Top langs compact dark" width="300"/>
@@ -55,8 +47,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
   &title_color=e59bba&text_color=ffffff&bg_color=161b22&hide_border=true
 ```
 
----
-
 #### `layout=donut`
 
 <img src="https://github-stats.coela.workers.dev/api/top-langs/?username=coelacant1&layout=donut&langs_count=8" alt="Top langs donut" width="460"/>
@@ -64,8 +54,6 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
 ```
 /api/top-langs/?username=coelacant1&layout=donut&langs_count=8
 ```
-
----
 
 #### `layout=donut-vertical`
 
@@ -76,18 +64,16 @@ Built in TypeScript with no dependencies at runtime - uses native Workers `fetch
   &title_color=e59bba&text_color=ffffff&bg_color=161b22&hide_border=true
 ```
 
----
-
 #### `layout=pie`
 
-<img src="https://github-stats.coela.workers.dev/api/top-langs/?username=coelacant1&layout=pie&langs_count=8&size_weight=0.5&count_weight=0.5&custom_title=Language%20Distribution" alt="Top langs pie" width="430"/>
+<img src="https://github-stats.coela.workers.dev/api/top-langs/?username=coelacant1&layout=pie&langs_count=8&custom_title=Language%20Distribution" alt="Top langs pie" width="430"/>
 
 ```
 /api/top-langs/?username=coelacant1&layout=pie&langs_count=8
-  &size_weight=0.5&count_weight=0.5&custom_title=Language%20Distribution
+  &custom_title=Language%20Distribution
 ```
 
----
+> Tip: pass `&size_weight=0.5&count_weight=0.5` to weight by repository count instead of pure byte size - this changes the percentages, so keep the weights consistent if you display multiple cards together.
 
 ## API reference
 
@@ -119,13 +105,9 @@ All styling params above, plus:
 | `count_weight` | `0` | Repo-count weighting (0–1) |
 | `exclude_repo` | *(empty)* | Comma-separated repo names to exclude |
 
----
-
 ## Deploy Your Own via Cloudflare Workers Builds
 
 Everything is done in the browser. Cloudflare's Git integration watches your repo and redeploys automatically on every push to `main`.
-
----
 
 ### Step 1 - Connect your repo
 
@@ -136,8 +118,6 @@ In the Cloudflare dashboard:
 3. Click **Save and Deploy**
 
 If you already created a Worker: go to the Worker -> **Settings** -> **Builds** -> **Connect**.
-
----
 
 ### Step 2 - Configure the build settings
 
@@ -151,15 +131,11 @@ In your Worker -> **Settings** -> **Builds**, set:
 
 Save. The build command ensures wrangler is installed before the deploy runs.
 
----
-
 ### Step 3 - Create a KV namespace
 
 1. In the Cloudflare dashboard sidebar, go to **Workers & Pages** -> **KV**
 2. Click **Create namespace**, name it `CACHE_KV`, click **Add**
 3. Copy the **Namespace ID** from the list
-
----
 
 ### Step 4 - Edit `wrangler.toml` on GitHub
 
@@ -173,8 +149,6 @@ preview_id = "YOUR_NAMESPACE_ID_HERE"  # same ID is fine
 ```
 
 Commit the change - this triggers a build and deploys automatically.
-
----
 
 ### Step 5 - Add your GitHub PAT(s) as runtime secrets
 
@@ -192,8 +166,6 @@ Your Worker URL will be:
 https://github-stats.YOUR-SUBDOMAIN.workers.dev
 ```
 
----
-
 ## Local development *(optional)*
 
 ```bash
@@ -203,8 +175,6 @@ cp dev.vars.example .dev.vars
 npm run dev
 # -> http://localhost:8787
 ```
-
----
 
 ## Architecture
 

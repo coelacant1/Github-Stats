@@ -17,7 +17,7 @@ export function parseTheme(q: Record<string, string | undefined>): CardTheme {
     titleColor: sanitizeColor(q["title_color"] ?? "2f80ed"),
     iconColor: sanitizeColor(q["icon_color"] ?? "4c71f2"),
     textColor: sanitizeColor(q["text_color"] ?? "434d58"),
-    bgColor: sanitizeColor(q["bg_color"] ?? "fffefe"),
+    bgColor: sanitizeColor(q["bg_color"] ?? "00000000"),
     hideBorder: q["hide_border"] === "true",
     borderColor: sanitizeColor(q["border_color"] ?? "e4e2e2"),
     borderRadius: clamp(parseInt(q["border_radius"] ?? "4.5"), 0, 50),

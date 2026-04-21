@@ -44,13 +44,17 @@ async function handleStats(env: Env, q: Record<string, string>): Promise<Respons
   const numberFormat = (q["number_format"] as "short" | "long") ?? "short";
   const customTitle = q["custom_title"];
 
-  const cacheKey = `stats:v2:${username}:${includeAllCommits}`;
+  const includeMergedPRs = showFields.includes("prs_merged") || showFields.includes("prs_merged_percentage");
+  const includeDiscussions = showFields.includes("discussions_started");
+  const includeDiscussionAnswers = showFields.includes("discussions_answered");
+
+  const cacheKey = `stats:v2:${username}:${includeAllCommits ? 1 : 0}${includeMergedPRs ? 1 : 0}${includeDiscussions ? 1 : 0}${includeDiscussionAnswers ? 1 : 0}`;
   const { value: data, isStale } = await getOrFetch(env, cacheKey, 4 * 3600, () =>
     fetchStats(env, username, {
       includeAllCommits,
-      includeMergedPRs: showFields.includes("prs_merged") || showFields.includes("prs_merged_percentage"),
-      includeDiscussions: showFields.includes("discussions_started"),
-      includeDiscussionAnswers: showFields.includes("discussions_answered"),
+      includeMergedPRs,
+      includeDiscussions,
+      includeDiscussionAnswers,
     }),
   );
 

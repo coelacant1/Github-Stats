@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-04-21
+
+### Fixed
+- Stats card fails with "Max retries" when `include_all_commits=true`: REST `search/commits` results are now cached in KV for 7 days and used as a fallback on rate-limit errors, instead of throwing.
+- Top-langs percentages differing between layouts in the README: the pie example was using different `size_weight`/`count_weight` values than the other layouts - normalized to defaults.
+- Cache key cardinality: stats cache key now encodes `includeMergedPRs`, `includeDiscussions`, and `includeDiscussionAnswers` flags so different `show=` combinations are stored separately and don't return wrong/missing fields.
+
+### Changed
+- Default card background is now transparent (`00000000`) instead of solid white, matching typical GitHub README usage.
+
 ## [0.1.1] - 2026-04-21
 
 ### Added
